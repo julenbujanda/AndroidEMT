@@ -1,6 +1,7 @@
 package ga.julen.busemt;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Context context;
     private GoogleMap map;
     private LocationManager locationManager;
+    private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +62,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
+            progressDialog = new ProgressDialog(MainActivity.this);
+            progressDialog.setTitle("EMT");
+            progressDialog.setMessage("Cargando...");
+            progressDialog.setIndeterminate(false);
+            progressDialog.show();
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 17.0f));
-            for (MarkerOptions markerOptions : paradas(location)) {
-                map.addMarker(markerOptions);
-            }
         }
 
         @Override
@@ -91,8 +95,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private ArrayList<MarkerOptions> paradas(Location location) {
-        final ArrayList<MarkerOptions> markers = new ArrayList<>();
-        final ArrayList<Parada> stops = new ArrayList<>();
         HashMap<String, String> params = new HashMap<>();
         params.put("idClient", context.getString(R.string.idClient));
         params.put("passKey", context.getString(R.string.passKey));
@@ -104,6 +106,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 "https://openbus.emtmadrid.es:9443/emt-proxy-server/last/geo/GetStopsFromXY.php",
                 new JSONObject(params),
                 new Response.Listener<JSONObject>() {
+                    ArrayList<MarkerOptions> markers = new ArrayList<>();
+                    ArrayList<Parada> stops = new ArrayList<>();
+
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
@@ -119,7 +124,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
+                        for (Parada parada : stops) {
+                            MarkerOptions markerOptions = new MarkerOptions()
+                                    .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
+                                    .title("Parada " + parada.getId());
+                            markers.add(markerOptions);
+                        }
+                        for (MarkerOptions markerOptions : markers) {
+                            map.addMarker(markerOptions);
+                        }
+                        progressDialog.dismiss();
                     }
+
                 },
                 new Response.ErrorListener() {
                     @Override
@@ -127,13 +143,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         Log.d("responseError", error.getMessage());
                     }
                 });
-        for (Parada parada : stops) {
-            MarkerOptions markerOptions = new MarkerOptions()
-                    .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
-                    .title("Parada " + parada.getId());
-            markers.add(markerOptions);
-        }
-        return markers;
+
+        return null;
     }
 
     private Parada generarParada(JSONObject objParada) throws JSONException {
