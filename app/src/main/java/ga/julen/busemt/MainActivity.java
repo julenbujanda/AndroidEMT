@@ -10,6 +10,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -24,6 +25,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -58,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         public void onLocationChanged(Location location) {
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 17.0f));
+            for (MarkerOptions markerOptions : paradas(location)) {
+                map.addMarker(markerOptions);
+            }
         }
 
         @Override
@@ -85,7 +91,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private ArrayList<MarkerOptions> paradas(Location location) {
-        ArrayList<MarkerOptions> markers=new ArrayList<>();
+        final ArrayList<MarkerOptions> markers = new ArrayList<>();
+        final ArrayList<Parada> stops = new ArrayList<>();
         HashMap<String, String> params = new HashMap<>();
         params.put("idClient", context.getString(R.string.idClient));
         params.put("passKey", context.getString(R.string.passKey));
@@ -99,16 +106,55 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-
+                        try {
+                            Object objParadas = response.get("stop");
+                            if (objParadas instanceof JSONArray) {
+                                JSONArray paradas = (JSONArray) objParadas;
+                                for (int i = 0; i < paradas.length(); i++) {
+                                    stops.add(generarParada(paradas.getJSONObject(i)));
+                                }
+                            } else if (objParadas != null) {
+                                stops.add(generarParada((JSONObject) objParadas));
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
+                        Log.d("responseError", error.getMessage());
                     }
                 });
+        for (Parada parada : stops) {
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
+                    .title("Parada " + parada.getId());
+            markers.add(markerOptions);
+        }
+        return markers;
+    }
 
+    private Parada generarParada(JSONObject objParada) throws JSONException {
+        JSONObject parada = objParada;
+        String id = (String) parada.get("stopId");
+        String direccion = (String) parada.get("postalAddress");
+        double latParada = (double) parada.get("latitude");
+        double longParada = (double) parada.get("longitude");
+        Object line = parada.get("line");
+        String lines = "";
+        if (line instanceof JSONArray) {
+            JSONArray lineas = (JSONArray) line;
+            for (int i = 0; i < lineas.length(); i++) {
+                JSONObject linea = lineas.getJSONObject(i);
+                lines += linea.get("line") + " ";
+            }
+        } else {
+            JSONObject linea = (JSONObject) line;
+            lines += linea.get("line") + " ";
+        }
+        return new Parada(Integer.parseInt(id), direccion, latParada, longParada, lines.trim());
     }
 
 }
