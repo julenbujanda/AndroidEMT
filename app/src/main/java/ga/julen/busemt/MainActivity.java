@@ -153,8 +153,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         requestQueue.add(jsonObjectRequest);
     }
 
-    private Parada generarParada(JSONObject objParada) throws JSONException {
-        JSONObject parada = objParada;
+    private Parada generarParada(JSONObject parada) throws JSONException {
         String id = (String) parada.get("stopId");
         String direccion = (String) parada.get("postalAddress");
         double latParada = (double) parada.get("latitude");
