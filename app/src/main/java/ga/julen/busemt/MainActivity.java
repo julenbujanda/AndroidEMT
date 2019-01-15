@@ -17,7 +17,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,6 +32,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             progressDialog.setMessage("Cargando...");
             progressDialog.setIndeterminate(false);
             progressDialog.show();
+            paradas(location);
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location.getLatitude(), location.getLongitude()), 17.0f));
         }
 
@@ -94,25 +96,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.getUiSettings().setMyLocationButtonEnabled(true);
     }
 
-    private ArrayList<MarkerOptions> paradas(Location location) {
-        HashMap<String, String> params = new HashMap<>();
+    private void paradas(Location location) {
+        final HashMap<String, String> params = new HashMap<>();
         params.put("idClient", context.getString(R.string.idClient));
         params.put("passKey", context.getString(R.string.passKey));
-        params.put("Radius", "500");
+        params.put("Radius", "300");
         params.put("latitude", String.valueOf(location.getLatitude()));
         params.put("longitude", String.valueOf(location.getLongitude()));
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+        StringRequest jsonObjectRequest = new StringRequest(
+                Request.Method.POST,
                 "https://openbus.emtmadrid.es:9443/emt-proxy-server/last/geo/GetStopsFromXY.php",
-                new JSONObject(params),
-                new Response.Listener<JSONObject>() {
-                    ArrayList<MarkerOptions> markers = new ArrayList<>();
-                    ArrayList<Parada> stops = new ArrayList<>();
-
+                new Response.Listener<String>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(String response) {
+                        ArrayList<MarkerOptions> markers = new ArrayList<>();
+                        ArrayList<Parada> stops = new ArrayList<>();
+                        Log.d("response", response);
                         try {
-                            Object objParadas = response.get("stop");
+                            Object objParadas = new JSONObject(response).get("stop");
                             if (objParadas instanceof JSONArray) {
                                 JSONArray paradas = (JSONArray) objParadas;
                                 for (int i = 0; i < paradas.length(); i++) {
@@ -142,9 +144,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public void onErrorResponse(VolleyError error) {
                         Log.d("responseError", error.getMessage());
                     }
-                });
-
-        return null;
+                }) {
+            @Override
+            protected Map<String, String> getParams() {
+                return params;
+            }
+        };
+        requestQueue.add(jsonObjectRequest);
     }
 
     private Parada generarParada(JSONObject objParada) throws JSONException {
