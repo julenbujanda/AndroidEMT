@@ -189,4 +189,53 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return new Parada(Integer.parseInt(id), direccion, latParada, longParada, lines.trim());
     }
 
+    private void proximasLlegadas(String stopId) {
+        final HashMap<String, String> params = new HashMap<>();
+        params.put("idClient", context.getString(R.string.idClient));
+        params.put("passKey", context.getString(R.string.passKey));
+        params.put("stopId", stopId);
+        RequestQueue requestQueue = Volley.newRequestQueue(context);
+        StringRequest stringRequest = new StringRequest(
+                Request.Method.POST,
+                "https://openbus.emtmadrid.es:9443/emt-proxy-server/last/geo/GetArriveStop.php",
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONArray llegadas = new JSONObject(response).getJSONArray("arrives");
+                            for (int i = 0; i < llegadas.length(); i++) {
+                                JSONObject llegada = llegadas.getJSONObject(i);
+                                String linea = (String) llegada.get("lineId");
+                                String destino = (String) llegada.get("destination");
+                                long tiempo = (long) llegada.get("busTimeLeft");
+                                System.out.println("Línea: " + linea + "\n" +
+                                        "    Destino: " + destino);
+                                if (tiempo == 999999) {
+                                    System.out.println("    Tiempo restante: Más de 20 minutos");
+                                } else if (tiempo > 60) {
+                                    System.out.println("    Tiempo restante: " + (tiempo / 60) + " minutos");
+                                } else {
+                                    System.out.println("    Tiempo restante: " + tiempo + " segundos");
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                return params;
+            }
+        };
+        requestQueue.add(stringRequest);
+    }
+
 }
