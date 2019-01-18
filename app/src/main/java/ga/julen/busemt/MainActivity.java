@@ -1,6 +1,7 @@
 package ga.julen.busemt;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -26,6 +27,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
@@ -112,6 +114,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         StopInfoWindow stopInfoWindow = new StopInfoWindow(context);
         map.setInfoWindowAdapter(stopInfoWindow);
         map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                proximasLlegadas(((Parada) marker.getTag()).getId());
+            }
+        });
     }
 
     private void paradas(Location location) {
@@ -189,11 +197,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return new Parada(Integer.parseInt(id), direccion, latParada, longParada, lines.trim());
     }
 
-    private void proximasLlegadas(String stopId) {
+    private void proximasLlegadas(int stopId) {
+        progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setTitle("Próximas llegadas");
+        progressDialog.setMessage("Cargando...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.show();
         final HashMap<String, String> params = new HashMap<>();
         params.put("idClient", context.getString(R.string.idClient));
         params.put("passKey", context.getString(R.string.passKey));
-        params.put("stopId", stopId);
+        params.put("idStop", String.valueOf(stopId));
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         StringRequest stringRequest = new StringRequest(
                 Request.Method.POST,
@@ -202,22 +215,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     @Override
                     public void onResponse(String response) {
                         try {
+                            Log.d("response", response);
                             JSONArray llegadas = new JSONObject(response).getJSONArray("arrives");
+                            String info = "";
                             for (int i = 0; i < llegadas.length(); i++) {
                                 JSONObject llegada = llegadas.getJSONObject(i);
                                 String linea = (String) llegada.get("lineId");
                                 String destino = (String) llegada.get("destination");
-                                long tiempo = (long) llegada.get("busTimeLeft");
-                                System.out.println("Línea: " + linea + "\n" +
-                                        "    Destino: " + destino);
+                                int tiempo = (int) llegada.get("busTimeLeft");
+                                info += "Línea: " + linea + "\n" +
+                                        "    Destino: " + destino;
                                 if (tiempo == 999999) {
-                                    System.out.println("    Tiempo restante: Más de 20 minutos");
+                                    info += "\n    Tiempo restante: Más de 20 minutos\n";
                                 } else if (tiempo > 60) {
-                                    System.out.println("    Tiempo restante: " + (tiempo / 60) + " minutos");
+                                    info += "\n    Tiempo restante: " + (tiempo / 60) + " minutos\n";
                                 } else {
-                                    System.out.println("    Tiempo restante: " + tiempo + " segundos");
+                                    info += "\n    Tiempo restante: " + tiempo + " segundos\n";
                                 }
                             }
+                            progressDialog.dismiss();
+                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                            builder.setTitle("Próximas llegadas")
+                                    .setMessage(info)
+                                    .setPositiveButton("OK", null)
+                                    .show();
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -226,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
+                        Log.d("error", error.getMessage());
                     }
                 }
         ) {
