@@ -24,11 +24,13 @@ public class StopInfoWindow implements GoogleMap.InfoWindowAdapter {
     @Override
     public View getInfoContents(Marker marker) {
         View view = ((Activity) context).getLayoutInflater().inflate(R.layout.info_window, null);
-        TextView lblNombre = view.findViewById(R.id.name);
-        TextView lblDetalles = view.findViewById(R.id.details);
         Parada parada = (Parada) marker.getTag();
-        lblNombre.setText(marker.getTitle());
-        lblDetalles.setText(marker.getSnippet());
+        TextView lblNombre = view.findViewById(R.id.name);
+        TextView lblDireccion = view.findViewById(R.id.address);
+        TextView lblLineas = view.findViewById(R.id.lines);
+        lblNombre.setText("Parada " + parada.getId());
+        lblDireccion.setText(parada.getDireccion());
+        lblLineas.setText("Líneas: " + parada.getLineas());
         return view;
     }
 

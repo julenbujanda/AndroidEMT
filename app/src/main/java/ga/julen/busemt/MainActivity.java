@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             e.printStackTrace();
                         }
                         for (Parada parada : stops) {
-                            map.addMarker(generarMarker(parada));
+                            map.addMarker(generarMarker(parada)).setTag(parada);
                         }
                         progressDialog.dismiss();
                     }
@@ -161,10 +161,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private MarkerOptions generarMarker(Parada parada) {
         return new MarkerOptions()
-                .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
-                .title("Parada " + parada.getId())
-                .snippet("Líneas: " + parada.getLineas() +
-                        "\nDirección: " + parada.getDireccion());
+                .position(new LatLng(parada.getLatitud(), parada.getLongitud()));
     }
 
     private Parada generarParada(JSONObject parada) throws JSONException {
