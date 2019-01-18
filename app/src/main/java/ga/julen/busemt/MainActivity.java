@@ -105,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         checkLocationPermission();
         map.setMyLocationEnabled(true);
         map.getUiSettings().setMyLocationButtonEnabled(true);
+        StopInfoWindow stopInfoWindow=new StopInfoWindow(context);
+        map.setInfoWindowAdapter(stopInfoWindow);
     }
 
     private void paradas(Location location) {
@@ -141,8 +143,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             MarkerOptions markerOptions = new MarkerOptions()
                                     .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
                                     .title("Parada " + parada.getId())
-                                    .snippet("Líneas: " + parada.getLineas() /*+
-                                            "\nDirección: " + parada.getDireccion()*/);
+                                    .snippet("Líneas: " + parada.getLineas() +
+                                            "\nDirección: " + parada.getDireccion());
                             markers.add(markerOptions);
                         }
                         for (MarkerOptions markerOptions : markers) {
