@@ -52,16 +52,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                cargarMapa();
             }
         });
         context = this;
+        if (checkLocationPermission())
+            cargarMapa();
+    }
+
+    private void cargarMapa() {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if (checkLocationPermission())
-            locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, null);
+        locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, null);
     }
 
     private boolean checkLocationPermission() {
@@ -107,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.getUiSettings().setMyLocationButtonEnabled(true);
         StopInfoWindow stopInfoWindow = new StopInfoWindow(context);
         map.setInfoWindowAdapter(stopInfoWindow);
+        map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
     }
 
     private void paradas(Location location) {
