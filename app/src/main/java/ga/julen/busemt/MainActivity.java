@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         checkLocationPermission();
         map.setMyLocationEnabled(true);
         map.getUiSettings().setMyLocationButtonEnabled(true);
-        StopInfoWindow stopInfoWindow=new StopInfoWindow(context);
+        StopInfoWindow stopInfoWindow = new StopInfoWindow(context);
         map.setInfoWindowAdapter(stopInfoWindow);
     }
 
@@ -123,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        ArrayList<MarkerOptions> markers = new ArrayList<>();
                         ArrayList<Parada> stops = new ArrayList<>();
                         Log.d("response", response);
                         try {
@@ -140,15 +139,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             e.printStackTrace();
                         }
                         for (Parada parada : stops) {
-                            MarkerOptions markerOptions = new MarkerOptions()
-                                    .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
-                                    .title("Parada " + parada.getId())
-                                    .snippet("Líneas: " + parada.getLineas() +
-                                            "\nDirección: " + parada.getDireccion());
-                            markers.add(markerOptions);
-                        }
-                        for (MarkerOptions markerOptions : markers) {
-                            map.addMarker(markerOptions);
+                            map.addMarker(generarMarker(parada));
                         }
                         progressDialog.dismiss();
                     }
@@ -166,6 +157,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
         requestQueue.add(stringRequest);
+    }
+
+    private MarkerOptions generarMarker(Parada parada) {
+        return new MarkerOptions()
+                .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
+                .title("Parada " + parada.getId())
+                .snippet("Líneas: " + parada.getLineas() +
+                        "\nDirección: " + parada.getDireccion());
     }
 
     private Parada generarParada(JSONObject parada) throws JSONException {
