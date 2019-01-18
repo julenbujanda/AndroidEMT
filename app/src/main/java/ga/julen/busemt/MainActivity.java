@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                
+
             }
         });
         context = this;
@@ -60,14 +60,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        checkLocationPermission();
-        locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, null);
+        if (checkLocationPermission())
+            locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, null);
     }
 
-    private void checkLocationPermission() {
+    private boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
+        return ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
     private LocationListener locationListener = new LocationListener() {
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         params.put("latitude", String.valueOf(location.getLatitude()));
         params.put("longitude", String.valueOf(location.getLongitude()));
         RequestQueue requestQueue = Volley.newRequestQueue(context);
-        StringRequest jsonObjectRequest = new StringRequest(
+        StringRequest stringRequest = new StringRequest(
                 Request.Method.POST,
                 "https://openbus.emtmadrid.es:9443/emt-proxy-server/last/geo/GetStopsFromXY.php",
                 new Response.Listener<String>() {
@@ -139,7 +140,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         for (Parada parada : stops) {
                             MarkerOptions markerOptions = new MarkerOptions()
                                     .position(new LatLng(parada.getLatitud(), parada.getLongitud()))
-                                    .title("Parada " + parada.getId());
+                                    .title("Parada " + parada.getId())
+                                    .snippet("Líneas: " + parada.getLineas() /*+
+                                            "\nDirección: " + parada.getDireccion()*/);
                             markers.add(markerOptions);
                         }
                         for (MarkerOptions markerOptions : markers) {
@@ -160,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return params;
             }
         };
-        requestQueue.add(jsonObjectRequest);
+        requestQueue.add(stringRequest);
     }
 
     private Parada generarParada(JSONObject parada) throws JSONException {
