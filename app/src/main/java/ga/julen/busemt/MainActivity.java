@@ -46,10 +46,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ProgressDialog progressDialog;
     private FloatingActionButton fab;
 
+    private String idClient;
+    private String passKey;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        idClient = getString(R.string.idClient);
+        passKey = getString(R.string.passKey);
         fab = findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -124,8 +129,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void paradas(Location location) {
         final HashMap<String, String> params = new HashMap<>();
-        params.put("idClient", context.getString(R.string.idClient));
-        params.put("passKey", context.getString(R.string.passKey));
+        params.put("idClient", idClient);
+        params.put("passKey", passKey);
         params.put("Radius", "300");
         params.put("latitude", String.valueOf(location.getLatitude()));
         params.put("longitude", String.valueOf(location.getLongitude()));
@@ -204,8 +209,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         progressDialog.setIndeterminate(false);
         progressDialog.show();
         final HashMap<String, String> params = new HashMap<>();
-        params.put("idClient", context.getString(R.string.idClient));
-        params.put("passKey", context.getString(R.string.passKey));
+        params.put("idClient", idClient);
+        params.put("passKey", passKey);
         params.put("idStop", String.valueOf(stopId));
         RequestQueue requestQueue = Volley.newRequestQueue(context);
         StringRequest stringRequest = new StringRequest(
