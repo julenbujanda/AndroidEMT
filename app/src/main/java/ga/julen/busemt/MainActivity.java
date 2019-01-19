@@ -222,26 +222,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         try {
                             Log.d("response", response);
                             JSONArray llegadas = new JSONObject(response).getJSONArray("arrives");
-                            String info = "";
+                            StringBuilder info = new StringBuilder();
                             for (int i = 0; i < llegadas.length(); i++) {
                                 JSONObject llegada = llegadas.getJSONObject(i);
                                 String linea = (String) llegada.get("lineId");
                                 String destino = (String) llegada.get("destination");
                                 int tiempo = (int) llegada.get("busTimeLeft");
-                                info += "Línea: " + linea + "\n" +
-                                        "    Destino: " + destino;
+                                info.append("Línea: ").append(linea).append("\n").append("    Destino: ").append(destino);
                                 if (tiempo == 999999) {
-                                    info += "\n    Tiempo restante: Más de 20 minutos\n";
+                                    info.append("\n    Tiempo restante: Más de 20 minutos\n");
                                 } else if (tiempo > 60) {
-                                    info += "\n    Tiempo restante: " + (tiempo / 60) + " minutos\n";
+                                    info.append("\n    Tiempo restante: ").append(tiempo / 60).append(" minutos\n");
                                 } else {
-                                    info += "\n    Tiempo restante: " + tiempo + " segundos\n";
+                                    info.append("\n    Tiempo restante: ").append(tiempo).append(" segundos\n");
                                 }
                             }
                             progressDialog.dismiss();
                             AlertDialog.Builder builder = new AlertDialog.Builder(context);
                             builder.setTitle("Próximas llegadas")
-                                    .setMessage(info)
+                                    .setMessage(info.toString())
                                     .setPositiveButton("OK", null)
                                     .show();
                         } catch (JSONException e) {
