@@ -141,27 +141,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        ArrayList<Parada> stops = new ArrayList<>();
-                        Log.d("response", response);
                         try {
-                            Object objParadas = new JSONObject(response).get("stop");
-                            if (objParadas instanceof JSONArray) {
-                                JSONArray paradas = (JSONArray) objParadas;
-                                for (int i = 0; i < paradas.length(); i++) {
-                                    stops.add(generarParada(paradas.getJSONObject(i)));
-                                }
-                            } else if (objParadas != null) {
-                                stops.add(generarParada((JSONObject) objParadas));
-                            }
+                            mostrarParadas(new JSONObject(response));
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        for (Parada parada : stops) {
-                            map.addMarker(generarMarker(parada)).setTag(parada);
-                        }
-                        progressDialog.dismiss();
                     }
-
                 },
                 new Response.ErrorListener() {
                     @Override
@@ -175,6 +160,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
         requestQueue.add(stringRequest);
+    }
+
+    private void mostrarParadas(JSONObject jsonResponse) throws JSONException {
+        ArrayList<Parada> stops = new ArrayList<>();
+        Object objParadas = jsonResponse.get("stop");
+        if (objParadas instanceof JSONArray) {
+            JSONArray paradas = (JSONArray) objParadas;
+            for (int i = 0; i < paradas.length(); i++) {
+                stops.add(generarParada(paradas.getJSONObject(i)));
+            }
+        } else if (objParadas != null) {
+            stops.add(generarParada((JSONObject) objParadas));
+        }
+        for (Parada parada : stops) {
+            map.addMarker(generarMarker(parada)).setTag(parada);
+        }
+        progressDialog.dismiss();
     }
 
     private MarkerOptions generarMarker(Parada parada) {
