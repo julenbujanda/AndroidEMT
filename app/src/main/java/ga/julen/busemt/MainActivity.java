@@ -220,29 +220,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     @Override
                     public void onResponse(String response) {
                         try {
-                            Log.d("response", response);
-                            JSONArray llegadas = new JSONObject(response).getJSONArray("arrives");
-                            StringBuilder info = new StringBuilder();
-                            for (int i = 0; i < llegadas.length(); i++) {
-                                JSONObject llegada = llegadas.getJSONObject(i);
-                                String linea = (String) llegada.get("lineId");
-                                String destino = (String) llegada.get("destination");
-                                int tiempo = (int) llegada.get("busTimeLeft");
-                                info.append("Línea: ").append(linea).append("\n").append("    Destino: ").append(destino);
-                                if (tiempo == 999999) {
-                                    info.append("\n    Tiempo restante: Más de 20 minutos\n");
-                                } else if (tiempo > 60) {
-                                    info.append("\n    Tiempo restante: ").append(tiempo / 60).append(" minutos\n");
-                                } else {
-                                    info.append("\n    Tiempo restante: ").append(tiempo).append(" segundos\n");
-                                }
-                            }
-                            progressDialog.dismiss();
-                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                            builder.setTitle("Próximas llegadas")
-                                    .setMessage(info.toString())
-                                    .setPositiveButton("OK", null)
-                                    .show();
+                            mostrarProximasLlegadas(new JSONObject(response));
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -261,6 +239,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         };
         requestQueue.add(stringRequest);
+    }
+
+    private void mostrarProximasLlegadas(JSONObject jsonResponse) throws JSONException {
+        JSONArray llegadas = jsonResponse.getJSONArray("arrives");
+        StringBuilder info = new StringBuilder();
+        for (int i = 0; i < llegadas.length(); i++) {
+            JSONObject llegada = llegadas.getJSONObject(i);
+            String linea = (String) llegada.get("lineId");
+            String destino = (String) llegada.get("destination");
+            int tiempo = (int) llegada.get("busTimeLeft");
+            info.append("Línea: ").append(linea).append("\n").append("    Destino: ").append(destino);
+            if (tiempo == 999999) {
+                info.append("\n    Tiempo restante: Más de 20 minutos\n");
+            } else if (tiempo > 60) {
+                info.append("\n    Tiempo restante: ").append(tiempo / 60).append(" minutos\n");
+            } else {
+                info.append("\n    Tiempo restante: ").append(tiempo).append(" segundos\n");
+            }
+        }
+        progressDialog.dismiss();
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Próximas llegadas")
+                .setMessage(info.toString())
+                .setPositiveButton("OK", null)
+                .show();
     }
 
 }
